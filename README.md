@@ -1,2 +1,0 @@
-# Reformandome
-Life reset
