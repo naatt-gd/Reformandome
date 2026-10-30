@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171326"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="assets/icon-192.png">
+<title>Reformándome · 66 días</title>
+<style>
+:root{--bg:#100e18;--panel:#1c1928;--panel2:#292339;--txt:#f7f2ff;--muted:#b9aecb;--violet:#b99aff;--pink:#f3a7d5;--line:#40364f}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#171326,#0e0d15 70%);color:var(--txt);font:15px system-ui;padding-bottom:70px}
+header{padding:22px 17px 13px;background:#171326;position:sticky;top:0;z-index:4;border-bottom:1px solid var(--line)}
+h1{font-size:24px;margin:0}header p{color:var(--muted);margin:4px 0 0;font-size:13px}
+nav{display:flex;gap:7px;overflow:auto;padding:9px;background:#151220;position:sticky;top:78px;z-index:3}
+nav button,.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:10px 12px;border-radius:12px;white-space:nowrap}
+nav button.active{background:var(--violet);color:#21172e;font-weight:800}
+main{max-width:850px;margin:auto;padding:13px}.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:15px;margin-bottom:13px}
+h2{font-size:19px;margin:0 0 9px}h3{font-size:15px;color:var(--pink);margin:17px 0 7px}
+p{color:var(--muted);line-height:1.45}.big{font-size:30px;color:var(--violet);font-weight:850}
+label{display:block;font-weight:600;margin:12px 0 6px}
+input:not([type=checkbox]),select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:#110f19;color:var(--txt);font:inherit}
+input[type=checkbox]{accent-color:var(--violet);width:18px;height:18px;margin-right:7px;vertical-align:middle}
+.options{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:7px}.opt{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px;font-weight:400;margin:0}
+.primary{background:var(--violet);color:#21172e;border:0;padding:12px 15px;border-radius:11px;font-weight:800;margin:8px 6px 0 0}
+.progress{height:7px;background:#40364f;border-radius:9px;overflow:hidden}.progress span{height:100%;display:block;background:linear-gradient(90deg,var(--violet),var(--pink))}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.stat{background:var(--panel2);padding:12px;border-radius:11px}.stat b{display:block;color:var(--violet);font-size:21px}
+.mission{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}.warning{background:#34291e;border-left:3px solid #e9b56d;padding:10px;border-radius:8px;color:#ffe0b5}.small{font-size:12px}
+footer{position:fixed;bottom:0;width:100%;padding:10px;background:#171326;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px}
+</style></head><body>
+<header><h1>✦ Reformándome</h1><p>Tu aventura de 66 días · un plan que se adapta a tu vida</p></header><nav id="nav"></nav><main id="app"></main><footer>Datos guardados en este dispositivo · Sin cuenta · Sin anuncios</footer>
+<script>
+const KEY='reformandome_rpg_v3';
+const blank={start:new Date().toISOString().slice(0,10),answers:{},done:{},xp:0,coins:0,meals:[],water:0,habits:['Beber agua','Moverme un poco','Comer con atención','Preparar el descanso'],checkins:[],shift:{start:'2026-10-29',sequence:'TTLL',pattern:'2 trabajados / 2 libres'}};
+let d;try{d=Object.assign({},blank,JSON.parse(localStorage.getItem(KEY)||'{}'));}catch(e){d=blank}
+let page='Inicio',step=0;
+const tabs=['Inicio','Mi perfil','Cuestionario','Misiones','Turnos','Nutrición','Entreno','Vida','Progreso','Ajustes'];
+const qs=[
+['1. Objetivos y motivación','Queremos saber qué significa para ti mejorar.',[
+['goals','¿Qué objetivos quieres trabajar?',['Perder grasa/peso','Ganar fuerza','Mejorar resistencia','Tener más energía','Movilidad y postura','Reducir estrés','Crear hábitos','Mejorar autoestima']],
+['priority','¿Cuál es tu prioridad principal?',['Pérdida de grasa','Fuerza','Salud y energía','Constancia','Bienestar emocional']],
+['why','¿Qué cambio te gustaría notar al acabar?','text','Ej.: sentirme más ágil, descansar mejor…'],
+['motivation','¿Qué te motiva más?',['Ver estadísticas','Retos y recompensas','Rutinas claras','Variedad','Seguimiento semanal']],
+['barriers','¿Qué te lo pone difícil?',['Cansancio','Falta de tiempo','Motivación','Molestias físicas','Estrés','No saber qué hacer','Comidas improvisadas','Otros']]
+]],
+['2. Tu punto de partida','Así ajustamos el nivel inicial.',[
+['activity','Actividad diaria habitual',['Muy baja','Baja','Moderada','Alta']],
+['experience','Experiencia entrenando',['Ninguna','Principiante','Intermedia','Avanzada']],
+['days','Días de entrenamiento deseados',['2 días','3 días','4 días','5 días','Adaptado a turnos']],
+['minutes','Tiempo disponible por sesión',['10–15 min','20–30 min','30–45 min','45–60 min','Variable']],
+['confidence','¿Cómo te sientes al empezar?',['Me da respeto','Con ganas pero me cuesta','Confiada, necesito estructura','Tengo experiencia']]
+]],
+['3. Salud y seguridad','Responde con sinceridad. No sustituye una valoración profesional.',[
+['conditions','¿Qué circunstancias debemos tener en cuenta?',['Ninguna','Hernia de hiato/reflujo','Escoliosis','Asma/problema respiratorio','Hipertensión/cardiopatía','Problemas articulares','Lesión reciente','Otra']],
+['pain','¿Tienes molestias actualmente?',['No','Rodilla','Espalda/cuello','Cadera/tobillo','Hombro/muñeca','Varias zonas','Dolor intenso o limitante']],
+['paindetail','Describe zona, intensidad 0–10 y cuándo aparece','text','Ej.: rodilla 2/10 al bajar escaleras…'],
+['restrictions','¿Tienes restricciones profesionales o ejercicios contraindicados?','text','Indica cuáles o “ninguna conocida”.'],
+['clearance','¿Te han indicado que puedes hacer ejercicio?',['Sí, sin restricciones','Sí, con restricciones','No lo he consultado','Necesito consultarlo']],
+['avoid','¿Qué prefieres evitar?',['Saltos/impacto','Correr','Arrodillarme','Flexiones de tronco','Ejercicios tumbada','Ninguno']]
+]],
+['4. Trabajo y horarios','El plan debe adaptarse a tus días reales.',[
+['work','Tipo de jornada',['Turnos de 12 horas','Turnos de 8 horas','Jornada partida','Horario fijo de mañana','Rotatorio/variable','Otro']],
+['pattern','Patrón de turnos',['2 trabajados / 2 libres','3 trabajados / 3 libres','Días alternos','Introducir fechas manualmente','Personalizado']],
+['energy','¿Cómo acabas un turno?',['Agotada, necesito recuperar','Cansada, puedo hacer algo suave','Con energía','Depende del turno']],
+['besttime','¿Cuándo prefieres entrenar?',['Al levantarme','Antes del turno','Después del turno','Día libre por la mañana','Día libre por la tarde','Variable']],
+['sleep','Horas de sueño habituales',['Menos de 5','5–6','6–7','7–8','Más de 8','Variable']]
+]],
+['5. Lugar y material','No necesitas comprar nada para empezar.',[
+['place','¿Dónde entrenarás?',['En casa','Gimnasio','Al aire libre','Combinación']],
+['equipment','¿Qué material tienes?',['Ninguno','Esterilla','Bandas elásticas','Mancuernas','Kettlebell/pesas','Bicicleta estática','Otro']],
+['space','Espacio disponible',['Pequeño, tamaño esterilla','Espacio para moverse','Zona dedicada']],
+['likes','¿Qué actividad te atrae?',['Fuerza sencilla','Movilidad/Pilates suave','Baile bajo impacto','Caminar','Circuitos cortos','Me da igual']],
+['dislikes','¿Qué ejercicios no te gustan?','text','Ej.: burpees, saltos, correr…']
+]],
+['6. Alimentación','Personalizamos preferencias, horarios y presupuesto sin dietas rígidas.',[
+['meals','Comidas al día que te encajan',['3','4','5','Depende del turno']],
+['diet','Tipo de alimentación',['Omnívora','Vegetariana','Vegana','Otra']],
+['intolerances','Alergias, intolerancias o alimentos que sientan mal','text','Indica cuáles; distingue alergias diagnosticadas.'],
+['likesfood','Alimentos que te gustan','text','Escribe tus favoritos.'],
+['dislikesfood','Alimentos que no quieres incluir','text','Escribe los que no te gustan.'],
+['budget','Presupuesto para comida',['Ajustado','Medio','Flexible']],
+['cook','Tiempo para cocinar',['Menos de 15 min','15–30 min','30–45 min','Cocinar por tandas']],
+['digestive','¿Hay aspectos digestivos a respetar?',['Ninguno','Reflujo/hernia de hiato','Hinchazón','Digestiones pesadas','Otros']],
+['triggers','¿Qué alimentos o situaciones empeoran síntomas?','text','Ej.: cenas copiosas, picante, café…']
+]],
+['7. Descanso y vida diaria','También cuentan la recuperación y el bienestar.',[
+['waterhabit','Agua aproximada al día',['Menos de 1 L','1–1,5 L','1,5–2 L','Más de 2 L','No lo sé']],
+['stress','Estrés habitual',['Bajo','Moderado','Alto','Muy alto/variable']],
+['lifeareas','¿Qué áreas quieres mejorar?',['Sueño','Orden de casa','Lectura/estudio','Autocuidado','Aire libre','Finanzas','Ocio','Vida social']],
+['morning','¿Qué te gustaría en tu rutina de mañana?','text','Ej.: desayunar tranquila, aseo…'],
+['evening','¿Qué te gustaría en tu rutina de noche?','text','Ej.: preparar mañana, leer…']
+]],
+['8. Seguimiento y estilo','La mejor planificación es la que puedes sostener.',[
+['review','Frecuencia de revisión',['Diaria y breve','Semanal','Cada dos semanas']],
+['style','Estilo de acompañamiento',['Cercano y motivador','Directo y práctico','Videojuego con niveles/misiones','Mezcla']],
+['pace','Ritmo de progresión',['Muy gradual','Moderado','Retos progresivos, sin perder seguridad']],
+['rewards','¿Qué recompensas te motivan?',['Logros y niveles','Monedas virtuales','Ocio planificado','Estadísticas y rachas','No necesito recompensas']],
+['extra','¿Algo más que deba saber?','text','Cualquier detalle importante…']
+]]
+];
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function save(){localStorage.setItem(KEY,JSON.stringify(d))}
+function go(p){page=p;render()}
+function question(it){let [k,l,t,ph]=it,v=d.answers[k]??'';if(Array.isArray(t)){let a=Array.isArray(v)?v:[];return `<label>${l}</label><div class="options">${t.map(x=>`<label class="opt"><input type="checkbox" data-multi="${k}" value="${esc(x)}" ${a.includes(x)?'checked':''}>${esc(x)}</label>`).join('')}</div>`}if(t==='text')return `<label>${l}</label><textarea data-q="${k}" rows="2" placeholder="${esc(ph)}">${esc(v)}</textarea>`;return `<label>${l}</label><select data-q="${k}"><option value="">Elige…</option>${t.map(x=>`<option ${v===x?'selected':''}>${esc(x)}</option>`).join('')}</select>`}
+function plan(){let a=d.answers,goals=a.goals||[],safe=a.pain!=='Dolor intenso o limitante'&&a.clearance!=='Sí, con restricciones';let days=(a.days||'3 días').startsWith('2')?'2':(a.days||'').startsWith('4')?'4':'3';let t=safe?`${days} sesiones por semana, de ${a.minutes||'20–30 min'}, en ${a.place||'casa'}. Empezar con movilidad cómoda, fuerza básica y actividad suave; aumentar poco a poco según tolerancia.`:'No iniciar una progresión de entrenamiento hasta consultar las restricciones o el dolor con un profesional sanitario.';if((a.avoid||[]).includes('Saltos/impacto')||(a.avoid||[]).includes('Correr'))t+=' Sin correr ni saltar.';let f=`Propuesta flexible de ${a.meals||'4'} comidas al día, ajustada a tus preferencias, presupuesto y horarios.`;if(a.intolerances)f+=` Tener en cuenta: ${a.intolerances}.`;if(a.triggers)f+=` Evitar o adaptar desencadenantes indicados: ${a.triggers}.`;let warnings=[];if(!safe)warnings.push('Has indicado dolor limitante o restricciones: pide orientación sanitaria antes de entrenar.');if(a.pain&&a.pain!=='No'&&a.pain!=='Dolor intenso o limitante')warnings.push('Mantén solo movimientos cómodos. Si el dolor aumenta, detén el ejercicio y solicita valoración.');if((a.conditions||[]).includes('Hernia de hiato/reflujo'))warnings.push('Con reflujo, evita entrenar justo después de comer y ajusta intensidad y posiciones según tolerancia.');return `<section class="card"><h2>Tu plan de partida</h2><h3>Entrenamiento</h3><p>${esc(t)}</p><h3>Alimentación</h3><p>${esc(f)}</p><h3>Rutinas y recuperación</h3><p>En días de trabajo largo, deja como opción descanso o una misión suave. Reserva las sesiones más completas para los días con más energía.</p><h3>Seguimiento</h3><p>${esc(a.review||'Revisión semanal')}: registra energía, sueño, molestias y constancia.</p>${warnings.map(x=>`<p class="warning">${esc(x)}</p>`).join('')}<p class="small">Es una orientación inicial automatizada, no un diagnóstico ni una prescripción médica o nutricional.</p></section>`}
+function questionnaire(){let q=qs[step];return `<section class="card"><h2>Cuestionario de personalización</h2><p>${q[1]}</p><div class="progress"><span style="width:${(step+1)/qs.length*100}%"></span></div><p class="small">Bloque ${step+1} de ${qs.length}</p><h2>${q[0]}</h2>${q[2].map(question).join('')}<button class="secondary" onclick="step=Math.max(0,step-1);render()" ${step===0?'disabled':''}>Anterior</button><button class="primary" onclick="step=Math.min(qs.length-1,step+1);save();render()">${step===qs.length-1?'Terminar':'Siguiente'}</button><button class="secondary" onclick="go('Mi perfil')">Guardar y salir</button></section>`}
+function home(){let day=Math.max(1,Math.min(66,Math.floor((Date.now()-new Date(d.start+'T00:00:00').getTime())/86400000)+1));return `<section class="card"><div class="big">DÍA ${day} / 66</div><div class="progress"><span style="width:${day/66*100}%"></span></div><div class="grid"><div class="stat"><b>${d.xp}</b>XP</div><div class="stat"><b>${Math.floor(d.xp/100)+1}</b>Nivel</div><div class="stat"><b>${Object.values(d.done).filter(Boolean).length}</b>Misiones</div><div class="stat"><b>${d.coins}</b>Monedas</div></div><p>Tu objetivo no es hacerlo perfecto: es volver a intentarlo.</p><button class="primary" onclick="go('Cuestionario')">Personalizar mi plan</button></section>${plan()}`}
+function missions(){let list=['Beber agua regularmente','Hacer movimiento adaptado','Preparar una comida equilibrada','Dedicar 5 minutos a ordenar/preparar algo','Reservar un momento de descanso'];return `<section class="card"><h2>Misiones de hoy</h2><p>Completa las que tengan sentido hoy; descansar también forma parte del proceso.</p>${list.map((x,i)=>{let k=new Date().toDateString()+i;return `<div class="mission"><input type="checkbox" ${d.done[k]?'checked':''} onchange="mission(${i},this.checked)"><span>${x}</span><b style="margin-left:auto;color:var(--violet)">+10 XP</b></div>`}).join('')}</section>`}
+function turns(){return `<section class="card"><h2>Configuración de turnos</h2><label>Patrón</label><select id="pat">${['2 trabajados / 2 libres','3 trabajados / 3 libres','Días alternos','Manual/personalizado'].map(x=>`<option ${d.shift.pattern===x?'selected':''}>${x}</option>`).join('')}</select><label>Fecha de referencia</label><input type="date" id="sdate" value="${esc(d.shift.start)}"><label>Secuencia (T=trabajo, L=libre)</label><input id="seq" value="${esc(d.shift.sequence)}"><button class="primary" onclick="d.shift={pattern:document.querySelector('#pat').value,start:document.querySelector('#sdate').value,sequence:document.querySelector('#seq').value};save();alert('Turnos guardados')">Guardar</button><p class="small">Esta versión guarda tu patrón como referencia; no interpreta automáticamente PDF ni fotografías ni crea eventos desde cualquier calendario.</p></section>`}
+function nutrition(){return `<section class="card"><h2>Nutrición</h2><p>Registro flexible: no necesitas contar calorías si no quieres.</p><label>Momento</label><input id="mealname" placeholder="Desayuno, comida…"><label>Qué has comido</label><textarea id="mealtext"></textarea><button class="primary" onclick="d.meals.push({n:document.querySelector('#mealname').value,t:document.querySelector('#mealtext').value});save();render()">Guardar</button><h3>Últimos registros</h3>${d.meals.slice(-8).reverse().map(x=>`<p>• ${esc(x.n)}: ${esc(x.t)}</p>`).join('')||'<p>Sin registros todavía.</p>'}<h3>Agua</h3><p>${d.water} vasos anotados hoy</p><button class="secondary" onclick="d.water++;save();render()">+ Un vaso</button></section>`}
+function life(){return `<section class="card"><h2>Hábitos y vida</h2>${d.habits.map(x=>`<div class="mission"><input type="checkbox"><span>${esc(x)}</span></div>`).join('')}<label>Añadir hábito</label><input id="habit" placeholder="Ej. leer 10 minutos"><button class="primary" onclick="d.habits.push(document.querySelector('#habit').value);save();render()">Añadir</button></section>`}
+function progress(){return `<section class="card"><h2>Progreso</h2><div class="grid"><div class="stat"><b>${d.xp}</b>XP</div><div class="stat"><b>${d.coins}</b>Monedas</div><div class="stat"><b>${Object.values(d.done).filter(Boolean).length}</b>Misiones</div><div class="stat"><b>${d.checkins.length}</b>Revisiones</div></div><label>¿Cómo te encuentras?</label><textarea id="note" placeholder="Energía, sueño, ánimo, molestias…"></textarea><button class="primary" onclick="d.checkins.push({date:new Date().toISOString(),text:document.querySelector('#note').value});save();render()">Guardar revisión</button>${d.checkins.slice(-5).reverse().map(x=>`<p>${new Date(x.date).toLocaleDateString('es-ES')}: ${esc(x.text)}</p>`).join('')}</section>`}
+function settings(){return `<section class="card"><h2>Ajustes y copia de seguridad</h2><label>Inicio del reto</label><input id="start" type="date" value="${esc(d.start)}"><button class="primary" onclick="d.start=document.querySelector('#start').value;save();render()">Guardar</button><p>Exporta una copia periódicamente. Los datos se guardan en el almacenamiento local de este navegador.</p><button class="secondary" onclick="backup()">Exportar copia JSON</button><label>Restaurar copia JSON</label><input type="file" id="file" accept=".json,application/json"><button class="secondary" onclick="restore()">Importar copia</button><button class="secondary" onclick="if(confirm('¿Borrar los datos de Reformándome v3? Exporta antes una copia.')){localStorage.removeItem(KEY);location.reload()}">Borrar datos v3</button><p class="small">Esta versión utiliza una clave propia y no migra automáticamente los datos de versiones anteriores.</p></section>`}
+function profile(){return `<section class="card"><h2>Mi perfil</h2><p>Completa el cuestionario por bloques. Puedes dejar preguntas en blanco y editar tus respuestas cuando quieras.</p><button class="primary" onclick="go('Cuestionario')">Abrir cuestionario</button></section>${plan()}`}
+function render(){document.querySelector('#nav').innerHTML=tabs.map(x=>`<button class="${x===page?'active':''}" onclick="go('${x}')">${x}</button>`).join('');let views={'Inicio':home,'Mi perfil':profile,'Cuestionario':questionnaire,'Misiones':missions,'Turnos':turns,'Nutrición':nutrition,'Entreno':()=>`<section class="card"><h2>Entrenamiento</h2><p>Tu propuesta actual se calcula a partir del cuestionario.</p></section>${plan()}`,'Vida':life,'Progreso':progress,'Ajustes':settings};document.querySelector('#app').innerHTML=views[page]()}
+function mission(i,on){let k=new Date().toDateString()+i;d.done[k]=on;if(on){d.xp+=10;d.coins++}else{d.xp=Math.max(0,d.xp-10);d.coins=Math.max(0,d.coins-1)}save();render()}
+function backup(){let b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='reformandome-copia.json';a.click();URL.revokeObjectURL(a.href)}
+function restore(){let f=document.querySelector('#file').files[0];if(!f)return alert('Selecciona un archivo');let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(confirm('La copia sustituirá los datos actuales de v3. ¿Continuar?')){d=Object.assign({},blank,x);save();render()}}catch(e){alert('Archivo no válido')}};r.readAsText(f)}
+document.addEventListener('input',e=>{if(e.target.dataset.q){d.answers[e.target.dataset.q]=e.target.value;save()}});
+document.addEventListener('change',e=>{if(e.target.dataset.q){d.answers[e.target.dataset.q]=e.target.value;save()}if(e.target.dataset.multi){let k=e.target.dataset.multi,v=e.target.value,a=d.answers[k]||[];d.answers[k]=e.target.checked?[...new Set([...a,v])]:a.filter(x=>x!==v);save()}});
+render();if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script></body></html>
